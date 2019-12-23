@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import msgpack
+import msgpack_numpy as m
+m.patch()
 import time
 from gevent import socket
 from gsocketpool.connection import Connection
@@ -65,7 +67,7 @@ cdef class RPCClient:
         self._unpack_encoding = unpack_encoding
         self._unpack_params = unpack_params or dict(use_list=False)
 
-        self._packer = msgpack.Packer(encoding=pack_encoding, **self._pack_params)
+        self._packer = msgpack.Packer(**self._pack_params)
 
         if not lazy:
             self.open()
@@ -132,8 +134,7 @@ cdef class RPCClient:
         cdef bytes data
         self._socket.sendall(req)
 
-        unpacker = msgpack.Unpacker(encoding=self._unpack_encoding,
-                                    **self._unpack_params)
+        unpacker = msgpack.Unpacker(**self._unpack_params)
         while True:
             data = self._socket.recv(SOCKET_RECV_SIZE)
             if not data:

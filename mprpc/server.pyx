@@ -3,9 +3,11 @@
 
 import gevent.socket
 import msgpack
+import msgpack_numpy as m
+m.patch()
 
-from constants import MSGPACKRPC_REQUEST, MSGPACKRPC_RESPONSE, SOCKET_RECV_SIZE
-from exceptions import MethodNotFoundError, RPCProtocolError
+from mprpc.constants import MSGPACKRPC_REQUEST, MSGPACKRPC_RESPONSE, SOCKET_RECV_SIZE
+from mprpc.exceptions import MethodNotFoundError, RPCProtocolError
 from gevent.local import local
 
 
@@ -52,7 +54,7 @@ cdef class RPCServer:
         self._tcp_no_delay = kwargs.pop('tcp_no_delay', False)
         self._methods = {}
 
-        self._packer = msgpack.Packer(encoding=pack_encoding, **pack_params)
+        self._packer = msgpack.Packer(**pack_params)
 
         self._address = local()
         self._address.client_host = None
@@ -82,8 +84,7 @@ cdef class RPCServer:
         cdef bytes data
         cdef int msg_id
 
-        unpacker = msgpack.Unpacker(encoding=self._unpack_encoding,
-                                    **self._unpack_params)
+        unpacker = msgpack.Unpacker(**self._unpack_params)
         while True:
             data = conn.recv(SOCKET_RECV_SIZE)
             if not data:
@@ -98,8 +99,7 @@ cdef class RPCServer:
             if type(req) not in (tuple, list):
                 self._send_error("Invalid protocol", -1, conn)
                 # reset unpacker as it might have garbage data
-                unpacker = msgpack.Unpacker(encoding=self._unpack_encoding,
-                                            **self._unpack_params)
+                unpacker = msgpack.Unpacker(**self._unpack_params)
                 continue
 
             (msg_id, method, args) = self._parse_request(req)
@@ -120,6 +120,7 @@ cdef class RPCServer:
         cdef int msg_id
 
         (_, msg_id, method_name, args) = req
+        method_name = method_name.decode('utf-8')
 
         method = self._methods.get(method_name, None)
 
