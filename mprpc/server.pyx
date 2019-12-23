@@ -84,7 +84,7 @@ cdef class RPCServer:
         cdef bytes data
         cdef int msg_id
 
-        unpacker = msgpack.Unpacker(**self._unpack_params)
+        unpacker = msgpack.Unpacker(raw=False, **self._unpack_params)
         while True:
             data = conn.recv(SOCKET_RECV_SIZE)
             if not data:
@@ -99,7 +99,7 @@ cdef class RPCServer:
             if type(req) not in (tuple, list):
                 self._send_error("Invalid protocol", -1, conn)
                 # reset unpacker as it might have garbage data
-                unpacker = msgpack.Unpacker(**self._unpack_params)
+                unpacker = msgpack.Unpacker(raw=False, **self._unpack_params)
                 continue
 
             (msg_id, method, args) = self._parse_request(req)
@@ -120,7 +120,6 @@ cdef class RPCServer:
         cdef int msg_id
 
         (_, msg_id, method_name, args) = req
-        method_name = method_name.decode('utf-8')
 
         method = self._methods.get(method_name, None)
 
