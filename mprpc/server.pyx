@@ -44,12 +44,17 @@ cdef class RPCServer:
     cdef _methods
     cdef _address
 
+    cdef _debug
+
     def __init__(self, *args, **kwargs):
         pack_encoding = kwargs.pop('pack_encoding', 'utf-8')
         pack_params = kwargs.pop('pack_params', dict(use_bin_type=True))
 
         self._unpack_encoding = kwargs.pop('unpack_encoding', 'utf-8')
         self._unpack_params = kwargs.pop('unpack_params', dict(use_list=False))
+
+        # add debug mode, print req/res
+        self._debug = kwargs.pop('debug', False)
 
         self._tcp_no_delay = kwargs.pop('tcp_no_delay', False)
         self._methods = {}
@@ -120,6 +125,8 @@ cdef class RPCServer:
         cdef int msg_id
 
         (_, msg_id, method_name, args) = req
+        if self._debug:
+            print(f'req: msg_id: {msg_id}, method_name: {method_name}, args:{args}')
 
         method = self._methods.get(method_name, None)
 
@@ -140,6 +147,10 @@ cdef class RPCServer:
 
     cdef _send_result(self, object result, int msg_id, _RPCConnection conn):
         msg = (MSGPACKRPC_RESPONSE, msg_id, None, result)
+
+        if self._debug:
+            print(f'res: msg: {msg}')
+
         conn.send(self._packer.pack(msg))
 
     cdef _send_error(self, str error, int msg_id, _RPCConnection conn):

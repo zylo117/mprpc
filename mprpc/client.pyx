@@ -51,10 +51,12 @@ cdef class RPCClient:
     cdef _tcp_no_delay
     cdef _keep_alive
 
+    cdef _debug
+
     def __init__(self, host, port, timeout=None, lazy=False,
                  pack_encoding='utf-8', unpack_encoding='utf-8',
                  pack_params=None, unpack_params=None,
-                 tcp_no_delay=False, keep_alive=False):
+                 tcp_no_delay=False, keep_alive=False, debug=False):
         self._host = host
         self._port = port
         self._timeout = timeout
@@ -68,6 +70,9 @@ cdef class RPCClient:
         self._unpack_params = unpack_params or dict(use_list=False)
 
         self._packer = msgpack.Packer(**self._pack_params)
+
+        # add debug mode, print req/res
+        self._debug = debug
 
         if not lazy:
             self.open()
@@ -158,6 +163,9 @@ cdef class RPCClient:
         cdef tuple req
         req = (MSGPACKRPC_REQUEST, self._msg_id, method, args)
 
+        if self._debug:
+            print(f'req: msg_id: {self._msg_id}, method_name: {method}, args:{args}')
+
         return self._packer.pack(req)
 
     cdef _parse_response(self, response):
@@ -166,6 +174,9 @@ cdef class RPCClient:
 
         cdef int msg_id
         (_, msg_id, error, result) = response
+
+        if self._debug:
+            print(f'res: msg_id: {self._msg_id}, error: {error}, result: {result}')
 
         if msg_id != self._msg_id:
             raise RPCError('Invalid Message ID')
