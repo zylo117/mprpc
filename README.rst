@@ -9,6 +9,9 @@ mprpc
 
 mprpc is a lightweight `MessagePack RPC <https://github.com/msgpack-rpc/msgpack-rpc>`_ library. It enables you to easily build a distributed server-side system by writing a small amount of code. It is built on top of `gevent <http://www.gevent.org/>`_ and `MessagePack <http://msgpack.org/>`_.
 
+This repo adapt to the newest msgpack with a little bit speedup and add numpy support.
+
+Also, this repo has unified the RPCServer and RPCClient usage, making it easier to use.
 
 Installation
 ------------
@@ -17,13 +20,8 @@ To install mprpc, simply:
 
 .. code-block:: bash
 
-    $ pip install mprpc
+    $ pip install git+https://github.com/zylo117/mprpc
 
-Alternatively,
-
-.. code-block:: bash
-
-    $ easy_install mprpc
 
 Examples
 --------
@@ -47,7 +45,7 @@ New Style (no need to inherit RPCServer explicitly)
     server.serve_forever()
 
 
-Original Style
+Original Style (Not Recommended)
 
 .. code-block:: python
 
@@ -93,41 +91,15 @@ Performance
 
 mprpc significantly outperforms the `official MessagePack RPC <https://github.com/msgpack-rpc/msgpack-rpc-python>`_ (**1.8x** faster), which is built using `Facebook's Tornado <http://www.tornadoweb.org/en/stable/>`_ and `MessagePack <http://msgpack.org/>`_, and `ZeroRPC <http://zerorpc.dotcloud.com/>`_ (**14x** faster), which is built using `ZeroMQ <http://zeromq.org/>`_ and `MessagePack <http://msgpack.org/>`_.
 
+While this repo has adapt to the newest msgpack with a few of extra features, it's a little bit faster than the original mprpc.
+
 Results
 ^^^^^^^
 
 .. image:: https://raw.github.com/studio-ousia/mprpc/master/docs/img/perf.png
-    :width: 550px
-    :height: 150px
+    :width: 600px
+    :height: 200px
     :alt: Performance Comparison
-
-mprpc
-~~~~~
-
-.. code-block:: bash
-
-    % python benchmarks/benchmark.py
-    call: 9508 qps
-    call_using_connection_pool: 10172 qps
-
-
-Official MesssagePack RPC
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. code-block:: bash
-
-    % pip install msgpack-rpc-python
-    % python benchmarks/benchmark_msgpackrpc_official.py
-    call: 4976 qps
-
-ZeroRPC
-~~~~~~~
-
-.. code-block:: bash
-
-    % pip install zerorpc
-    % python benchmarks/benchmark_zerorpc.py
-    call: 655 qps
 
 
 Documentation
