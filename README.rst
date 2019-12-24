@@ -36,6 +36,7 @@ RPC server
 New Style (no need to inherit RPCServer explicitly)
 
 .. code-block:: python
+
     from gevent.server import StreamServer
     from mprpc import RPCServer
 
@@ -50,6 +51,7 @@ New Style (no need to inherit RPCServer explicitly)
 Original Style
 
 .. code-block:: python
+
     from gevent.server import StreamServer
     from mprpc._server import _RPCServer
 
@@ -59,6 +61,7 @@ Original Style
 
     server = StreamServer(('127.0.0.1', 6000), SumServer())
     server.serve_forever()
+
 
 
 RPC client
