@@ -6,16 +6,17 @@ from distutils.core import setup
 from Cython.Distutils import Extension
 
 setup(name='mprpc',
-      version='0.1.17',
+      version='0.2.0',
       description='A fast MessagePack RPC library with numpy support',
       long_description=open('README.rst').read(),
       author='Studio Ousia',
+      co_author='Carl Cheung',
       author_email='ikuya@ousia.jp',
       url='http://github.com/studio-ousia/mprpc',
       packages=['mprpc'],
       ext_modules=cythonize([
           Extension("mprpc.client", ["mprpc/client.pyx"], language="c"),
-          Extension('mprpc.server', ['mprpc/server.pyx'], language="c")
+          Extension('mprpc._server', ['mprpc/_server.pyx'], language="c")
       ], language_level=3),
       license=open('LICENSE').read(),
       include_package_data=True,

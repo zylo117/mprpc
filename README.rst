@@ -33,15 +33,33 @@ RPC server
 
 .. code-block:: python
 
+New Style (no need to inherit RPCServer explicitly)
+
+.. code-block:: python
     from gevent.server import StreamServer
     from mprpc import RPCServer
 
-    class SumServer(RPCServer):
+    class SumServer:
+        def sum(self, x, y):
+            return x + y
+
+    server = RPCServer('127.0.0.1', 6000, SumServer())
+    server.serve_forever()
+
+
+Original Style
+
+.. code-block:: python
+    from gevent.server import StreamServer
+    from mprpc._server import _RPCServer
+
+    class SumServer(_RPCServer):
         def sum(self, x, y):
             return x + y
 
     server = StreamServer(('127.0.0.1', 6000), SumServer())
     server.serve_forever()
+
 
 RPC client
 ^^^^^^^^^^
