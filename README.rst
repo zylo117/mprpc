@@ -72,7 +72,7 @@ RPC client
     print client.call('sum', 1, 2)
 
 
-RPC client with connection pooling
+RPC client with connection pooling (generally you don't need it)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: python
@@ -96,7 +96,7 @@ While this repo has adapt to the newest msgpack with a few of extra features, it
 Results
 ^^^^^^^
 
-.. image:: https://raw.github.com/studio-ousia/mprpc/master/docs/img/perf.png
+.. image::  https://raw.githubusercontent.com/zylo117/mprpc/master/docs/img/pefr.png
     :width: 600px
     :height: 200px
     :alt: Performance Comparison
