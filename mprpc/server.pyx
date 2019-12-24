@@ -4,12 +4,12 @@
 import gevent.socket
 import msgpack
 import msgpack_numpy as m
+
 m.patch()
 
 from mprpc.constants import MSGPACKRPC_REQUEST, MSGPACKRPC_RESPONSE, SOCKET_RECV_SIZE
 from mprpc.exceptions import MethodNotFoundError, RPCProtocolError
 from gevent.local import local
-
 
 cdef class RPCServer:
     """RPC server.
@@ -45,6 +45,7 @@ cdef class RPCServer:
     cdef _address
 
     cdef _debug
+    cdef _is_available
 
     def __init__(self, *args, **kwargs):
         pack_encoding = kwargs.pop('pack_encoding', 'utf-8')
@@ -55,6 +56,9 @@ cdef class RPCServer:
 
         # add debug mode, print req/res
         self._debug = kwargs.pop('debug', False)
+
+        # record working status
+        self._is_available = True
 
         self._tcp_no_delay = kwargs.pop('tcp_no_delay', False)
         self._methods = {}
@@ -110,6 +114,10 @@ cdef class RPCServer:
             (msg_id, method, args) = self._parse_request(req)
 
             try:
+                if method != self.is_available:
+                    # set status to not available
+                    self._is_available = False
+
                 ret = method(*args)
 
             except Exception, e:
@@ -117,6 +125,12 @@ cdef class RPCServer:
 
             else:
                 self._send_result(ret, msg_id, conn)
+
+            finally:
+                # set status to available
+                if method != self.is_available:
+                    # set status to not available
+                    self._is_available = True
 
     cdef tuple _parse_request(self, req):
         if (len(req) != 4 or req[0] != MSGPACKRPC_REQUEST):
@@ -138,12 +152,17 @@ cdef class RPCServer:
                 raise MethodNotFoundError('Method not found: %s', method_name)
 
             method = getattr(self, method_name)
+
             if not hasattr(method, '__call__'):
                 raise MethodNotFoundError('Method is not callable: %s', method_name)
 
+            # caching method for faster call
             self._methods[method_name] = method
 
         return (msg_id, method, args)
+
+    def is_available(self):
+        return self._is_available
 
     cdef _send_result(self, object result, int msg_id, _RPCConnection conn):
         msg = (MSGPACKRPC_RESPONSE, msg_id, None, result)
@@ -156,7 +175,6 @@ cdef class RPCServer:
     cdef _send_error(self, str error, int msg_id, _RPCConnection conn):
         msg = (MSGPACKRPC_RESPONSE, msg_id, error, None)
         conn.send(self._packer.pack(msg))
-
 
 cdef class _RPCConnection:
     cdef _socket
