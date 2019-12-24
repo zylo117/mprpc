@@ -101,6 +101,10 @@ Results
     :height: 200px
     :alt: Performance Comparison
 
+Environment:
+Intel i5-8400
+Ubuntu 19.10 Desktop x64 (5.3.0-21-generic)
+Python3.7
 
 Documentation
 -------------
