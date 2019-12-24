@@ -37,7 +37,6 @@ New Style (no need to inherit RPCServer explicitly)
 
 .. code-block:: python
 
-    from gevent.server import StreamServer
     from mprpc import RPCServer
 
     class SumServer:
