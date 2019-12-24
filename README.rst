@@ -93,6 +93,13 @@ mprpc significantly outperforms the `official MessagePack RPC <https://github.co
 
 While this repo has adapt to the newest msgpack with a few of extra features, it's a little bit faster than the original mprpc.
 
+Personal perspective: zerorpc was my personal favorite before this repo. Though zerorpc use zeromq as middleware, which provides a more stable communication for rpc and even better, auto load balancing, it brings a lots of overhead along with it.
+
+Besides, this repo is cython optimized, yet zerorpc is not. So this benchmark it's not entirely fair.
+
+While using mprpc, you should pay attention to the load balancing and job distribution, which might be the real bottleneck someday.
+
+
 Results
 ^^^^^^^
 
@@ -102,8 +109,11 @@ Results
     :alt: Performance Comparison
 
 Environment:
+
 Intel i5-8400
+
 Ubuntu 19.10 Desktop x64 (5.3.0-21-generic)
+
 Python3.7
 
 Documentation
