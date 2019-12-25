@@ -71,10 +71,12 @@ cdef class _RPCServer:
         if 'timeout' in kwargs and 'nt' in os.name:
             raise OSError('Windows does not support signal, remove timeout argument and try again.')
 
-        global _timeout
-        _timeout = kwargs.get('timeout', 10)
         if 'nt' not in os.name:
+            global _timeout
+            _timeout = kwargs.get('timeout', 10)
             signal.signal(signal.SIGALRM, timeout)
+        else:
+            self._call = self._call_nt
 
         self._tcp_no_delay = kwargs.pop('tcp_no_delay', False)
         self._methods = {}
@@ -153,6 +155,10 @@ cdef class _RPCServer:
         signal.alarm(_timeout)
         ret = method(*args)
         signal.alarm(0)
+        return ret
+
+    def _call_nt(self, method, *args):
+        ret = method(*args)
         return ret
 
     cdef tuple _parse_request(self, req):
