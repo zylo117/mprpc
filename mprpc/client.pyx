@@ -4,6 +4,7 @@
 import msgpack
 import msgpack_numpy as m
 m.patch()
+
 import time
 from gevent import socket
 from gsocketpool.connection import Connection
@@ -28,10 +29,6 @@ cdef class RPCClient:
     :param int timeout: (optional) Socket timeout.
     :param bool lazy: (optional) If set to True, the socket connection is not
         established until you specifically call open()
-    :param str pack_encoding: (optional) Character encoding used to pack data
-        using Messagepack.
-    :param str unpack_encoding: (optional) Character encoding used to unpack
-        data using Messagepack.
     :param dict pack_params: (optional) Parameters to pass to Messagepack Packer
     :param dict unpack_params: (optional) Parameters to pass to Messagepack
     :param tcp_no_delay (optional) If set to True, use TCP_NODELAY.
@@ -46,10 +43,9 @@ cdef class RPCClient:
     cdef _socket
     cdef _packer
     cdef _pack_params
-    cdef _unpack_encoding
     cdef _unpack_params
-    cdef _tcp_no_delay
-    cdef _keep_alive
+    cdef bint _tcp_no_delay
+    cdef bint _keep_alive
 
     cdef _debug
 
@@ -66,7 +62,6 @@ cdef class RPCClient:
         self._tcp_no_delay = tcp_no_delay
         self._keep_alive = keep_alive
         self._pack_params = pack_params or dict(use_bin_type=True)
-        self._unpack_encoding = unpack_encoding
         self._unpack_params = unpack_params or dict(use_list=False)
 
         self._packer = msgpack.Packer(**self._pack_params)

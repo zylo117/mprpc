@@ -9,7 +9,6 @@ if 'nt' not in os.name:
 import gevent.socket
 import msgpack
 import msgpack_numpy as m
-
 m.patch()
 
 from mprpc.constants import MSGPACKRPC_REQUEST, MSGPACKRPC_RESPONSE, SOCKET_RECV_SIZE
@@ -19,46 +18,38 @@ from gevent.local import local
 cdef int _timeout
 
 cdef class _RPCServer:
-    """RPC server.
+    """
+    RPC server.
 
-    This class is assumed to be used with gevent StreamServer.
-
-    :param str pack_encoding: (optional) Character encoding used to pack data
-        using Messagepack.
-    :param str unpack_encoding: (optional) Character encoding used to unpack
-        data using Messagepack
     :param dict pack_params: (optional) Parameters to pass to Messagepack Packer
     :param dict unpack_params: (optional) Parameters to pass to Messagepack
         Unpacker
 
     Usage:
-        >>> from gevent.server import StreamServer
-        >>> import mprpc
+        >>> from mprpc import RPCServer
         >>>
-        >>> class SumServer(mprpc.RPCServer):
+        >>> class SumServer:
         ...     def sum(self, x, y):
         ...         return x + y
         ...
         >>>
-        >>> server = StreamServer(('127.0.0.1', 6000), SumServer())
+        >>> server = RPCServer('127.0.0.1', 6000, SumServer())
         >>> server.serve_forever()
     """
 
     cdef _packer
-    cdef _unpack_encoding
     cdef _unpack_params
-    cdef _tcp_no_delay
-    cdef _methods
+    cdef bint _tcp_no_delay
+    cdef dict _methods
     cdef _address
 
-    cdef _debug
-    cdef _is_available
+    cdef bint _debug
+    cdef bint _is_available
 
     def __init__(self, *args, **kwargs):
         pack_encoding = kwargs.pop('pack_encoding', 'utf-8')
         pack_params = kwargs.pop('pack_params', dict(use_bin_type=True))
 
-        self._unpack_encoding = kwargs.pop('unpack_encoding', 'utf-8')
         self._unpack_params = kwargs.pop('unpack_params', dict(use_list=False))
 
         # add debug mode, print req/res
@@ -166,6 +157,8 @@ cdef class _RPCServer:
             raise RPCProtocolError('Invalid protocol')
 
         cdef int msg_id
+        cdef str method_name
+        cdef tuple args
 
         (_, msg_id, method_name, args) = req
         if self._debug:
