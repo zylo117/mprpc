@@ -1,41 +1,40 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
-
 import time
 import multiprocessing
-
-import sys
-
-if sys.version_info < (3,):
-    range = xrange
-else:
-    import builtins
-    range = builtins.range
+import numpy as np
 
 NUM_CALLS = 10000
 
+img = np.array([1080, 1920, 3])
+
 
 def run_sum_server():
-    from gevent.server import StreamServer
     from mprpc import RPCServer
 
-    class SumServer(RPCServer):
+    class SumServer:
         def sum(self, x, y):
-            return x + y
+            return x
 
-    server = StreamServer(('127.0.0.1', 6000), SumServer())
+    server = RPCServer('127.0.0.1', 7777, SumServer())
     server.serve_forever()
 
 
 def call():
     from mprpc import RPCClient
 
-    client = RPCClient('127.0.0.1', 6000)
+    client = RPCClient('127.0.0.1', 7777)
 
-    start = time.time()
-    [client.call('sum', 1, 2) for _ in range(NUM_CALLS)]
+    t = np.zeros(NUM_CALLS)
 
-    print('call: %d qps' % (NUM_CALLS / (time.time() - start)))
+    for _ in range(NUM_CALLS):
+        t1 = time.time()
+        client.call('sum', 1, 2)
+        t2 = time.time()
+        t[_] = t2 - t1
+
+    print('stdev: {}'.format(t.std()))
+    print('mean: {}'.format(t.mean()))
+    print('call: {} qps'.format(1 / t.mean()))
 
 
 def call_using_connection_pool():
@@ -48,7 +47,7 @@ def call_using_connection_pool():
         with client_pool.connection() as client:
             return client.call('sum', 1, 2)
 
-    options = dict(host='127.0.0.1', port=6000)
+    options = dict(host='127.0.0.1', port=7777)
     client_pool = gsocketpool.pool.Pool(RPCPoolClient, options, initial_connections=20)
     glet_pool = gevent.pool.Pool(20)
 

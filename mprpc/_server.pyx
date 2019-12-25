@@ -11,7 +11,7 @@ import msgpack
 import msgpack_numpy as m
 m.patch()
 
-from mprpc.constants import MSGPACKRPC_REQUEST, MSGPACKRPC_RESPONSE, SOCKET_RECV_SIZE
+from mprpc.constants import MSGPACKRPC_REQUEST, MSGPACKRPC_RESPONSE
 from mprpc.exceptions import MethodNotFoundError, RPCProtocolError
 from gevent.local import local
 
@@ -45,6 +45,7 @@ cdef class _RPCServer:
 
     cdef bint _debug
     cdef bint _is_available
+    cdef int _buffer_size
 
     def __init__(self, *args, **kwargs):
         pack_encoding = kwargs.pop('pack_encoding', 'utf-8')
@@ -64,10 +65,13 @@ cdef class _RPCServer:
 
         if 'nt' not in os.name:
             global _timeout
-            _timeout = kwargs.get('timeout', 10)
+            _timeout = kwargs.pop('timeout', 10)
             signal.signal(signal.SIGALRM, timeout)
         else:
             self._call = self._call_nt
+
+        # add socket buffer_size
+        self._buffer_size = kwargs.pop('buffer_size', 1024 ** 2)
 
         self._tcp_no_delay = kwargs.pop('tcp_no_delay', False)
         self._methods = {}
@@ -104,7 +108,7 @@ cdef class _RPCServer:
 
         unpacker = msgpack.Unpacker(raw=False, **self._unpack_params)
         while True:
-            data = conn.recv(SOCKET_RECV_SIZE)
+            data = conn.recv(self._buffer_size)
             if not data:
                 break
 

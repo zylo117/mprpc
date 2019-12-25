@@ -10,13 +10,14 @@ from gevent import socket
 from gsocketpool.connection import Connection
 
 from mprpc.exceptions import RPCProtocolError, RPCError
-from mprpc.constants import MSGPACKRPC_REQUEST, MSGPACKRPC_RESPONSE, SOCKET_RECV_SIZE
+from mprpc.constants import MSGPACKRPC_REQUEST, MSGPACKRPC_RESPONSE
 
 from mprpc import logger
 
 
 cdef class RPCClient:
-    """RPC client.
+    """
+    RPC client.
 
     Usage:
         >>> from mprpc import RPCClient
@@ -34,6 +35,8 @@ cdef class RPCClient:
     :param tcp_no_delay (optional) If set to True, use TCP_NODELAY.
     :param keep_alive (optional) If set to True, use socket keep alive.
         Unpacker
+    :param buffer_size (optional) Socket buffer size
+    :param debug (optional) If True, print every req/res
     """
 
     cdef str _host
@@ -47,12 +50,13 @@ cdef class RPCClient:
     cdef bint _tcp_no_delay
     cdef bint _keep_alive
 
-    cdef _debug
+    cdef bint _debug
+    cdef int _buffer_size
 
     def __init__(self, host, port, timeout=None, lazy=False,
                  pack_encoding='utf-8', unpack_encoding='utf-8',
                  pack_params=None, unpack_params=None,
-                 tcp_no_delay=False, keep_alive=False, debug=False):
+                 tcp_no_delay=False, keep_alive=False, buffer_size=1024**2, debug=False):
         self._host = host
         self._port = port
         self._timeout = timeout
@@ -68,6 +72,9 @@ cdef class RPCClient:
 
         # add debug mode, print req/res
         self._debug = debug
+
+        # add socket buffer_size
+        self._buffer_size = buffer_size
 
         if not lazy:
             self.open()
@@ -136,7 +143,7 @@ cdef class RPCClient:
 
         unpacker = msgpack.Unpacker(raw=False, **self._unpack_params)
         while True:
-            data = self._socket.recv(SOCKET_RECV_SIZE)
+            data = self._socket.recv(self._buffer_size)
             if not data:
                 raise IOError('Connection closed')
             unpacker.feed(data)
